@@ -4,6 +4,7 @@ const db = require('../db');
 const bcrypt = require('bcrypt');
 const { BCRYPT_WORK_FACTOR } = require("../config");
 const { NotFoundError } = require("../expressError");
+const { getZipCodesInRadius } = require("../zipCodeApi");
 
 /** User of the site. */
 
@@ -104,7 +105,8 @@ class User {
               hobbies,
               interests,
               location,
-              friend_radius AS friendRadius
+              friend_radius AS friendRadius,
+              last_searched AS lastSearched,
       FROM users
       WHERE username = $1`,
       [username]
@@ -120,9 +122,39 @@ class User {
       ...results.rows[0],
       hobbies: results.rows[0].hobbies.split(", "),
       interests: results.rows[0].interests.split(", "),
-    }
+    };
 
     return user;
+  }
+
+  static async getViewableUsers({ username, location, friendRadius }) {
+    const locations = await getZipCodesInRadius(location, friendRadius);
+    const zipCodes = locations.map(l => l.zip_code);
+
+    const results = await db.query(
+      `SELECT first_name AS firstName,
+              last_name AS lastName,
+              hobbies,
+              interests,
+              location
+        FROM users AS u
+        JOIN viewed_users AS v ON(v.viewed_username = u.username)
+        WHERE location in $1
+        AND v.viewing_username <> $2`,
+      [zipCodes, username]
+    );
+
+    const users = results.rows.map(u => ({
+      ...u,
+      area: {
+        distance: locations.filter(l => l.zip_code === u.location)[0].distance,
+        city: locations.filter(l => l.zip_code === u.location)[0].city,
+        state: locations.filter(l => l.zip_code === u.location)[0].state,
+        zipCode: locations.filter(l => l.zip_code === u.location)[0].zip_code,
+      }
+    }));
+
+    return users;
   }
 
   /** Return messages from this user.

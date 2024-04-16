@@ -31,9 +31,10 @@ router.post('/', upload.single('image'), async function (req, res, next) {
       imageUrl: `https://${process.env.BUCKET_NAME}.s3.us-west-1.amazonaws.com/${params.Key}`
     });
   } catch (err) {
-    throw new Error(
-      "Failed to send image to server. Service is unavailable.", 503
-    );
+    console.error(err);
+    // throw new Error(
+    //   "Failed to send image to server. Service is unavailable.", 503
+    // );
   }
 });
 

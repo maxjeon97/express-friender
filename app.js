@@ -1,14 +1,11 @@
 import express from "express";
 import { NotFoundError } from "./expressError.js";
-import { add } from "./add.js";
 
 const app = express();
 app.use(express.json());
 
-/** Sample route */
-app.get("/", function (req, res) {
-  return res.send(`2 + 3 = ${add(2, 3)}`);
-});
+
+
 
 /** Handle 404 errors -- this matches everything */
 app.use(function (req, res, next) {

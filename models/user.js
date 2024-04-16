@@ -10,7 +10,15 @@ const { NotFoundError } = require("../expressError");
 class User {
 
   /** Register new user. Returns
-   *    {username, password, first_name, last_name, phone}
+   *    {
+   *      username,
+   *      firstName,
+   *      lastName,
+   *      hobbies,
+   *      interests,
+   *      location,
+   *      friendRadius
+   *    }
    */
 
   static async register({
@@ -45,7 +53,6 @@ class User {
       [username, hashedPassword, firstName, lastName, hobbies, interests, location, friendRadius]
     );
     return results.rows[0];
-
   }
 
   /** Authenticate: is username/password valid? Returns boolean. */
@@ -65,13 +72,13 @@ class User {
 
   //TODO: come back to this when we have more knowledge on filters
   /** All: basic info on all users:
-   * [{username, first_name, last_name}, ...] */
+   * [{username, firstName, lastName}, ...] */
 
   static async all() {
     const results = await db.query(
       `SELECT username,
-              first_name,
-              last_name
+              first_name AS firstName,
+              last_name AS lastName
       FROM users
       ORDER BY username`
     );
@@ -82,11 +89,12 @@ class User {
   /** Get: get user by username
    *
    * returns {username,
-   *          first_name,
-   *          last_name,
-   *          phone,
-   *          join_at,
-   *          last_login_at } */
+   *          firstName,
+   *          lastName,
+   *          hobbies,
+   *          interests,
+   *          location,
+   *          friendRadius } */
 
   static async get(username) {
     const results = await db.query(
@@ -96,7 +104,7 @@ class User {
               hobbies,
               interests,
               location,
-              friend_radius as friendRadius
+              friend_radius AS friendRadius
       FROM users
       WHERE username = $1`,
       [username]
@@ -147,14 +155,14 @@ class User {
     const messageData = results.rows.map(m => {
       return {
         id: m.id,
-        to_user: {
+        toUser: {
           username: m.to_username,
-          first_name: m.first_name,
-          last_name: m.last_name
+          firstName: m.first_name,
+          lastName: m.last_name
         },
         body: m.body,
-        sent_at: m.sent_at,
-        read_at: m.read_at
+        sentAt: m.sent_at,
+        readAt: m.read_at
       };
     });
 
@@ -191,14 +199,14 @@ class User {
     const messageData = results.rows.map(m => {
       return {
         id: m.id,
-        from_user: {
+        fromUser: {
           username: m.from_username,
-          first_name: m.first_name,
-          last_name: m.last_name
+          firstName: m.first_name,
+          lastName: m.last_name
         },
         body: m.body,
-        sent_at: m.sent_at,
-        read_at: m.read_at
+        sentAt: m.sent_at,
+        readAt: m.read_at
       };
     });
 

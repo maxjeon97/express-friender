@@ -1,11 +1,18 @@
-import express from "express";
-import { NotFoundError } from "./expressError.js";
+const express = require("express");
+const cors = require("cors");
 
+const { authenticateJWT, ensureLoggedIn } = require("./middleware/auth");
+
+const { NotFoundError } = require("./expressError");
 const app = express();
+
+app.use(cors());
 app.use(express.json());
+app.use(authenticateJWT);
 
+const uploadRoutes = require('./routes/upload');
 
-
+app.use('/upload', uploadRoutes);
 
 /** Handle 404 errors -- this matches everything */
 app.use(function (req, res, next) {
@@ -24,4 +31,4 @@ app.use(function (err, req, res, next) {
   });
 });
 
-export default app;
+module.exports = app;

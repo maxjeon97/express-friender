@@ -97,6 +97,7 @@ class User {
    *          location,
    *          friendRadius } */
 
+  //TODO: add image to schema
   static async get(username) {
     const results = await db.query(
       `SELECT username,
@@ -159,6 +160,9 @@ class User {
     return users;
   }
 
+
+  //TODO: Add seed data to test this query
+
   /**Get all friends of user
    *
    * returns [{firstName,
@@ -169,17 +173,26 @@ class User {
    */
   static async getFriends(username) {
     const results = await db.query(
-      `SELECT u.username
-              u.first_name AS firstName,
-              u.last_name AS lastName,
-        FROM users AS u
-        JOIN friends AS f ON(f.viewed_username = u.username)
-        WHERE location in $1
-        AND v.viewing_username <> $2`,
-      [zipCodes, username]
+      `SELECT
+        CASE
+          WHEN f.username1 = $1
+          THEN u2.username
+              u2.first_name AS firstName,
+              u2.last_name AS lastName
+          WHEN f.username2 = $1
+          THEN u1.username
+              u1.first_name AS firstName,
+              u1.last_name AS lastName
+        END
+        FROM friends AS f
+        JOIN users AS u1 ON(f.username1 = u1.username)
+        JOIN users AS u2 ON(f.username2 = u2.username)
+        WHERE f.username1 = $1
+        OR f.username2 = $1`,
+      [username]
     );
 
-    return;
+    return results.rows;
   }
 
   /**Adds friend relationship into the friends table in database

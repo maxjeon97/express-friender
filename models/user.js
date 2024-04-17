@@ -146,11 +146,11 @@ class User {
               interests,
               location
         FROM users AS u
-        LEFT OUTER JOIN viewed_users AS v ON(v.viewed_username = u.username)
         WHERE location = ANY ($1)
         AND u.username <> $2
-        AND (v.viewing_username <> $2
-        OR v.viewing_username IS NULL)`,
+        AND u.username NOT IN (SELECT viewed_username
+                                FROM viewed_users
+                                WHERE viewing_username = $2)`,
       [zipCodes, username]
     );
 

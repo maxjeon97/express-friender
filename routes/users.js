@@ -3,7 +3,7 @@
 const Router = require("express").Router;
 const router = new Router();
 
-
+// TODO: if we have time, add validation with jsonschema
 const { ensureLoggedIn, ensureCorrectUser } = require('../middleware/auth');
 const User = require('../models/user');
 const ViewedUser = require('../models/viewedUser');
@@ -29,6 +29,32 @@ router.get('/', ensureLoggedIn, async function (req, res, next) {
 router.get('/:username', ensureLoggedIn, async function (req, res, next) {
   const user = await User.get(req.params.username);
   return res.json({ user });
+});
+
+/** PATCH /[username] { user } => { user }
+ *
+ * Data can include:
+ *   { firstName, lastName, hobbies, interests, location, friendRadius }
+ *
+ * Returns { firstName, lastName, hobbies, interests, location, friendRadius }
+ *
+ * Authorization required: same user as username
+ **/
+
+router.patch("/:username", ensureCorrectUser, async function (req, res, next) {
+  const user = await User.update(req.params.username, req.body);
+  return res.json({ user });
+});
+
+
+/** DELETE /[username]  =>  { deleted: username }
+ *
+ * Authorization required: same user as username
+ **/
+
+router.delete("/:username", ensureCorrectUser, async function (req, res, next) {
+  await User.remove(req.params.username);
+  return res.json({ deleted: req.params.username });
 });
 
 /** GET /:username/viewable - get viewable users for username

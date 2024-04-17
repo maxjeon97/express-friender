@@ -3,6 +3,7 @@
 const db = require('../db');
 const bcrypt = require('bcrypt');
 const { BCRYPT_WORK_FACTOR } = require("../config");
+const { sqlForPartialUpdate } = require("../helpers/sql");
 const { NotFoundError } = require("../expressError");
 const { getZipCodesInRadius } = require("../zipCodeApi");
 
@@ -122,6 +123,63 @@ class User {
     const user = results.rows[0];
 
     return user;
+  }
+
+  /** Update user data with `data`.
+   *
+   * This is a "partial update" --- it's fine if data doesn't contain
+   * all the fields; this only changes provided ones.
+   *
+   * Data can include:
+   *   { firstName, lastName, hobbies, interests, location, friendRadius }
+   *
+   * Returns { firstName, lastName, hobbies, interests, location, friendRadius }
+   *
+   * Throws NotFoundError if not found.
+   *
+   */
+
+  static async update(username, data) {
+    const { setCols, values } = sqlForPartialUpdate(
+        data,
+        {
+          firstName: "first_name",
+          lastName: "last_name",
+          friendRadius: "friend_radius",
+        });
+    const usernameVarIdx = "$" + (values.length + 1);
+
+    const querySql = `
+        UPDATE users
+        SET ${setCols}
+        WHERE username = ${usernameVarIdx}
+        RETURNING username,
+            first_name AS "firstName",
+            last_name AS "lastName",
+            hobbies,
+            interests,
+            location,
+            friend_radius AS "friendRadius"`;
+    const result = await db.query(querySql, [...values, username]);
+    const user = result.rows[0];
+
+    if (!user) throw new NotFoundError(`No user: ${username}`);
+
+    return user;
+  }
+
+  /** Delete given user from database; returns undefined. */
+
+  static async remove(username) {
+    let result = await db.query(`
+        DELETE
+        FROM users
+        WHERE username = $1
+        RETURNING username`, [username],
+    );
+    const user = result.rows[0];
+
+    if (!user) throw new NotFoundError(`No user: ${username}`);
   }
 
   /**GET: returns users that are viewable by the user sending the request

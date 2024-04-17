@@ -140,12 +140,12 @@ class User {
 
   static async update(username, data) {
     const { setCols, values } = sqlForPartialUpdate(
-        data,
-        {
-          firstName: "first_name",
-          lastName: "last_name",
-          friendRadius: "friend_radius",
-        });
+      data,
+      {
+        firstName: "first_name",
+        lastName: "last_name",
+        friendRadius: "friend_radius",
+      });
     const usernameVarIdx = "$" + (values.length + 1);
 
     const querySql = `
@@ -294,8 +294,8 @@ class User {
    */
 
   static async messagesFrom(username) {
-  const results = await db.query(
-    `SELECT m.id,
+    const results = await db.query(
+      `SELECT m.id,
               m.to_username,
               u.first_name,
               u.last_name,
@@ -305,29 +305,29 @@ class User {
       FROM messages m
       JOIN users u ON(u.username = m.to_username)
       WHERE m.from_username = $1`,
-    [username]
-  );
+      [username]
+    );
 
-  if (results.rows.length === 0) {
-    throw new NotFoundError(`Cannot find user: ${username}`);
+    if (results.rows.length === 0) {
+      throw new NotFoundError(`Cannot find user: ${username}`);
+    }
+
+    const messageData = results.rows.map(m => {
+      return {
+        id: m.id,
+        toUser: {
+          username: m.to_username,
+          firstName: m.first_name,
+          lastName: m.last_name
+        },
+        body: m.body,
+        sentAt: m.sent_at,
+        readAt: m.read_at
+      };
+    });
+
+    return messageData;
   }
-
-  const messageData = results.rows.map(m => {
-    return {
-      id: m.id,
-      toUser: {
-        username: m.to_username,
-        firstName: m.first_name,
-        lastName: m.last_name
-      },
-      body: m.body,
-      sentAt: m.sent_at,
-      readAt: m.read_at
-    };
-  });
-
-  return messageData;
-}
 
   /** Return messages to this user.
    *
@@ -338,8 +338,8 @@ class User {
    */
 
   static async messagesTo(username) {
-  const results = await db.query(
-    `SELECT m.id,
+    const results = await db.query(
+      `SELECT m.id,
               m.from_username,
               u.first_name,
               u.last_name,
@@ -349,41 +349,41 @@ class User {
       FROM messages m
       JOIN users u ON(u.username = m.from_username)
       WHERE m.to_username = $1`,
-    [username]
-  );
+      [username]
+    );
 
-  if (results.rows.length === 0) {
-    throw new NotFoundError(`Cannot find user: ${username}`);
+    if (results.rows.length === 0) {
+      throw new NotFoundError(`Cannot find user: ${username}`);
+    }
+
+    const messageData = results.rows.map(m => {
+      return {
+        id: m.id,
+        fromUser: {
+          username: m.from_username,
+          firstName: m.first_name,
+          lastName: m.last_name
+        },
+        body: m.body,
+        sentAt: m.sent_at,
+        readAt: m.read_at
+      };
+    });
+
+    return messageData;
   }
 
-  const messageData = results.rows.map(m => {
-    return {
-      id: m.id,
-      fromUser: {
-        username: m.from_username,
-        firstName: m.first_name,
-        lastName: m.last_name
-      },
-      body: m.body,
-      sentAt: m.sent_at,
-      readAt: m.read_at
-    };
-  });
+  /** Return messages between current user and one of their matches
+     *
+     * [{id, fromUser, body, sentAt, readAt}]
+     *
+     * where fromUser is
+     *   {username, firstName, lastName}
+     */
 
-  return messageData;
-}
-
-/** Return messages to this user.
-   *
-   * [{id, from_user, body, sent_at, read_at}]
-   *
-   * where from_user is
-   *   {username, first_name, last_name}
-   */
-
-static async messagesTo(username) {
-  const results = await db.query(
-    `SELECT m.id,
+  static async messagesBetween(currUsername, matchUsername) {
+    const results = await db.query(
+      `SELECT m.id,
               m.from_username,
               u.first_name,
               u.last_name,
@@ -392,30 +392,35 @@ static async messagesTo(username) {
               m.read_at
       FROM messages m
       JOIN users u ON(u.username = m.from_username)
-      WHERE m.to_username = $1`,
-    [username]
-  );
+      WHERE (m.to_username = $1
+        AND m.from_username = $2)
+        OR (m.to_username = $2
+        AND m.from_username = $1)
+      ORDER BY m.sent_at`,
+      [currUsername, matchUsername]
+    );
 
-  if (results.rows.length === 0) {
-    throw new NotFoundError(`Cannot find user: ${username}`);
+    if (results.rows.length === 0) {
+      throw new NotFoundError(
+        `Cannot find messages between ${currUsername} and ${matchUsername}`);
+    }
+
+    const messageData = results.rows.map(m => {
+      return {
+        id: m.id,
+        fromUser: {
+          username: m.from_username,
+          firstName: m.first_name,
+          lastName: m.last_name
+        },
+        body: m.body,
+        sentAt: m.sent_at,
+        readAt: m.read_at
+      };
+    });
+
+    return messageData;
   }
-
-  const messageData = results.rows.map(m => {
-    return {
-      id: m.id,
-      fromUser: {
-        username: m.from_username,
-        firstName: m.first_name,
-        lastName: m.last_name
-      },
-      body: m.body,
-      sentAt: m.sent_at,
-      readAt: m.read_at
-    };
-  });
-
-  return messageData;
-}
 }
 
 

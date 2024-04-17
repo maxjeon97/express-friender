@@ -124,6 +124,21 @@ router.get('/:username/from', ensureCorrectUser, async function (req, res, next)
   return res.json({ messages });
 });
 
+/** GET /:username/messages-between/:matchUsername - get messages from user
+ *
+ * => {messages: [{id,
+ *                 body,
+ *                 sentAt,
+ *                 readAt,
+ *                 fromUser: {username, firstName, lastName}}, ...]
+ *
+ **/
+
+router.get('/:username/messages-between/:matchUsername', ensureCorrectUser, async function (req, res, next) {
+  const messages = await User.messagesBetween(req.params.username, req.params.matchUsername);
+  return res.json({ messages });
+});
+
 /** GET /:username/friends - get friends of a user
  *
  * => {friends: [{username,

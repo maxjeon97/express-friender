@@ -34,7 +34,7 @@ router.post('/register', async function (req, res) {
   const body = req.body;
 
   if (!body) {
-    throw new BadRequestError("Missing registeration information");
+    throw new BadRequestError("Missing registration information");
   }
 
   // why did {body} not work? results.rows was returning correct info

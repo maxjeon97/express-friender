@@ -217,6 +217,17 @@ class User {
     return;
   }
 
+  /**Updates imageUrl of user with submitted photo */
+  static async updatePhoto(username, imageUrl) {
+    await db.query(
+      `UPDATE users
+        SET image_url = $2
+          WHERE username = $1`,
+      [username, imageUrl]
+    );
+
+    return;
+  }
 
   /** Return messages from this user.
    *
@@ -227,8 +238,8 @@ class User {
    */
 
   static async messagesFrom(username) {
-    const results = await db.query(
-      `SELECT m.id,
+  const results = await db.query(
+    `SELECT m.id,
               m.to_username,
               u.first_name,
               u.last_name,
@@ -238,29 +249,29 @@ class User {
       FROM messages m
       JOIN users u ON(u.username = m.to_username)
       WHERE m.from_username = $1`,
-      [username]
-    );
+    [username]
+  );
 
-    if (results.rows.length === 0) {
-      throw new NotFoundError(`Cannot find user: ${username}`);
-    }
-
-    const messageData = results.rows.map(m => {
-      return {
-        id: m.id,
-        toUser: {
-          username: m.to_username,
-          firstName: m.first_name,
-          lastName: m.last_name
-        },
-        body: m.body,
-        sentAt: m.sent_at,
-        readAt: m.read_at
-      };
-    });
-
-    return messageData;
+  if (results.rows.length === 0) {
+    throw new NotFoundError(`Cannot find user: ${username}`);
   }
+
+  const messageData = results.rows.map(m => {
+    return {
+      id: m.id,
+      toUser: {
+        username: m.to_username,
+        firstName: m.first_name,
+        lastName: m.last_name
+      },
+      body: m.body,
+      sentAt: m.sent_at,
+      readAt: m.read_at
+    };
+  });
+
+  return messageData;
+}
 
   /** Return messages to this user.
    *
@@ -271,8 +282,8 @@ class User {
    */
 
   static async messagesTo(username) {
-    const results = await db.query(
-      `SELECT m.id,
+  const results = await db.query(
+    `SELECT m.id,
               m.from_username,
               u.first_name,
               u.last_name,
@@ -282,29 +293,29 @@ class User {
       FROM messages m
       JOIN users u ON(u.username = m.from_username)
       WHERE m.to_username = $1`,
-      [username]
-    );
+    [username]
+  );
 
-    if (results.rows.length === 0) {
-      throw new NotFoundError(`Cannot find user: ${username}`);
-    }
-
-    const messageData = results.rows.map(m => {
-      return {
-        id: m.id,
-        fromUser: {
-          username: m.from_username,
-          firstName: m.first_name,
-          lastName: m.last_name
-        },
-        body: m.body,
-        sentAt: m.sent_at,
-        readAt: m.read_at
-      };
-    });
-
-    return messageData;
+  if (results.rows.length === 0) {
+    throw new NotFoundError(`Cannot find user: ${username}`);
   }
+
+  const messageData = results.rows.map(m => {
+    return {
+      id: m.id,
+      fromUser: {
+        username: m.from_username,
+        firstName: m.first_name,
+        lastName: m.last_name
+      },
+      body: m.body,
+      sentAt: m.sent_at,
+      readAt: m.read_at
+    };
+  });
+
+  return messageData;
+}
 }
 
 

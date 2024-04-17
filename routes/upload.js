@@ -4,6 +4,8 @@ const express = require('express');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const multer = require('multer');
 const router = express.Router();
+const { ensureLoggedIn } = require('../middleware/auth');
+const User = require('../models/user');
 
 const s3Client = new S3Client({
   region: 'us-west-1',
@@ -16,7 +18,8 @@ const s3Client = new S3Client({
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-router.post('/', upload.single('image'), async function (req, res, next) {
+router.post('/', upload.single('image'), ensureLoggedIn, async function (req, res, next) {
+  const { username } = res.locals.user;
   const params = {
     Bucket: process.env.BUCKET_NAME,
     Key: `${Date.now()}_${req.file.originalname}`,
@@ -27,14 +30,17 @@ router.post('/', upload.single('image'), async function (req, res, next) {
   try {
     const command = new PutObjectCommand(params);
     await s3Client.send(command);
-    return res.json({
-      imageUrl: `https://${process.env.BUCKET_NAME}.s3.us-west-1.amazonaws.com/${params.Key}`
-    });
+
+    const imageUrl =
+      `https://${process.env.BUCKET_NAME}.s3.us-west-1.amazonaws.com/${params.Key}`;
+    await User.updatePhoto(username, imageUrl);
+
+    return res.json({ imageUrl });
   } catch (err) {
     console.error(err);
-    // throw new Error(
-    //   "Failed to send image to server. Service is unavailable.", 503
-    // );
+    throw new Error(
+      "Failed to send image.", 503
+    );
   }
 });
 

@@ -7,12 +7,13 @@ const User = require("../models/user");
 const { SECRET_KEY } = require('../config');
 const { BadRequestError, UnauthorizedError } = require("../expressError");
 
+
 /** POST /login: {username, password} => {token} */
 router.post("/login", async function (req, res) {
   const { username, password } = req.body;
 
   if (!req.body) {
-    throw new BadRequestError("missing login information");
+    throw new BadRequestError("Missing login information");
   }
 
   if (await User.authenticate(username, password)) {
@@ -20,10 +21,8 @@ router.post("/login", async function (req, res) {
     return res.json({ token });
   }
 
-  throw new UnauthorizedError("invalid credentials");
+  throw new UnauthorizedError("Invalid credentials");
 });
-
-
 
 
 /** POST /register: registers, logs in, and returns token.
@@ -35,14 +34,12 @@ router.post('/register', async function (req, res) {
   const body = req.body;
 
   if (!body) {
-    throw new BadRequestError("missing registeration information");
+    throw new BadRequestError("Missing registeration information");
   }
 
   // why did {body} not work? results.rows was returning correct info
   const user = await User.register(body);
   const token = jwt.sign({ username: user.username }, SECRET_KEY);
-
-
 
   return res.json({ token });
 });

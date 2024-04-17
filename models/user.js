@@ -116,18 +116,20 @@ class User {
       throw new NotFoundError(`Cannot find user: ${username}`);
     }
 
-    /**separating hobbies and interests from a string with commas to an array
-     * of values */
-    const user = {
-      ...results.rows[0],
-      hobbies: results.rows[0].hobbies.split(", "),
-      interests: results.rows[0].interests.split(", "),
-    };
+    const user = results.rows[0];
 
     return user;
   }
 
-  static async getViewableUsers({ username, location, friendRadius }) {
+  /**GET: returns users that are viewable by the user sending the request
+   *
+   * returns [{firstName,
+   *           lastName,
+   *           hobbies,
+   *           interests,
+   *           location}, ...]
+   */
+  static async getViewableUsers(username, location, friendRadius) {
     const locations = await getZipCodesInRadius(location, friendRadius);
     const zipCodes = locations.map(l => l.zip_code);
 
@@ -156,6 +158,42 @@ class User {
 
     return users;
   }
+
+  /**Get all friends of user
+   *
+   * returns [{firstName,
+   *           lastName,
+   *           hobbies,
+   *           interests,
+   *           location}, ...]
+   */
+  static async getFriends(username) {
+    const results = await db.query(
+      `SELECT u.username
+              u.first_name AS firstName,
+              u.last_name AS lastName,
+        FROM users AS u
+        JOIN friends AS f ON(f.viewed_username = u.username)
+        WHERE location in $1
+        AND v.viewing_username <> $2`,
+      [zipCodes, username]
+    );
+
+    return;
+  }
+
+  /**Adds friend relationship into the friends table in database
+   */
+  static async addFriend(username1, username2) {
+    await db.query(
+      `INSERT INTO friends (username1, username2)
+        VALUES ($1, $2)`,
+      [username1, username2]
+    );
+
+    return;
+  }
+
 
   /** Return messages from this user.
    *

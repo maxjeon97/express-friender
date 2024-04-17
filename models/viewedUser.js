@@ -10,7 +10,7 @@ class ViewedUser {
    *
    * returns true if both users match, returns false otherwise
    */
-  static async addViewAndCheckMatch({viewingUsername, viewedUsername, liked}) {
+  static async addViewAndCheckMatch(viewingUsername, viewedUsername, liked) {
     await db.query(
       `INSERT INTO viewed_users (
         viewing_username,
@@ -35,7 +35,7 @@ class ViewedUser {
     } else {
       return true;
     }
-
   }
-
 }
+
+module.exports = ViewedUser;

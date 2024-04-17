@@ -93,7 +93,7 @@ class User {
    * returns {username,
    *          firstName,
    *          lastName,
-   *          "imageUrl"
+   *          imageUrl,
    *          hobbies,
    *          interests,
    *          location,
@@ -114,7 +114,6 @@ class User {
       WHERE username = $1`,
       [username]
     );
-    console.log("*******************", results.rows[0]);
 
     if (!results.rows[0]) {
       throw new NotFoundError(`Cannot find user: ${username}`);
@@ -153,8 +152,7 @@ class User {
         UPDATE users
         SET ${setCols}
         WHERE username = ${usernameVarIdx}
-        RETURNING username,
-            first_name AS "firstName",
+        RETURNING first_name AS "firstName",
             last_name AS "lastName",
             hobbies,
             interests,
@@ -340,6 +338,50 @@ class User {
    */
 
   static async messagesTo(username) {
+  const results = await db.query(
+    `SELECT m.id,
+              m.from_username,
+              u.first_name,
+              u.last_name,
+              m.body,
+              m.sent_at,
+              m.read_at
+      FROM messages m
+      JOIN users u ON(u.username = m.from_username)
+      WHERE m.to_username = $1`,
+    [username]
+  );
+
+  if (results.rows.length === 0) {
+    throw new NotFoundError(`Cannot find user: ${username}`);
+  }
+
+  const messageData = results.rows.map(m => {
+    return {
+      id: m.id,
+      fromUser: {
+        username: m.from_username,
+        firstName: m.first_name,
+        lastName: m.last_name
+      },
+      body: m.body,
+      sentAt: m.sent_at,
+      readAt: m.read_at
+    };
+  });
+
+  return messageData;
+}
+
+/** Return messages to this user.
+   *
+   * [{id, from_user, body, sent_at, read_at}]
+   *
+   * where from_user is
+   *   {username, first_name, last_name}
+   */
+
+static async messagesTo(username) {
   const results = await db.query(
     `SELECT m.id,
               m.from_username,

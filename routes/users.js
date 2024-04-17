@@ -22,18 +22,18 @@ router.get('/', ensureLoggedIn, async function (req, res, next) {
 
 /** GET /:username - get detail of users.
  *
- * => {user: {username, firstName, lastName, hobbies, interests, location, friendRadius}}
+ * => {user: {username, firstName, lastName, imageUrl, hobbies, interests, location, friendRadius}}
  *
  **/
 
-router.get('/:username', ensureCorrectUser, async function (req, res, next) {
+router.get('/:username', ensureLoggedIn, async function (req, res, next) {
   const user = await User.get(req.params.username);
   return res.json({ user });
 });
 
 /** GET /:username/viewable - get viewable users for username
  *
- * => { users: [{firstName, lastName, hobbies, interests, location, area}] }
+ * => { users: [{firstName, lastName, imageUrl, hobbies, interests, location, area}] }
  *
  **/
 
@@ -96,6 +96,20 @@ router.get('/:username/to', ensureCorrectUser, async function (req, res, next) {
 router.get('/:username/from', ensureCorrectUser, async function (req, res, next) {
   const messages = await User.messagesFrom(req.params.username);
   return res.json({ messages });
+});
+
+/** GET /:username/friends - get friends of a user
+ *
+ * => {friends: [{username,
+ *                 firstName,
+ *                 lastName,
+ *                 imageUrl,} ...]
+ *
+ **/
+
+router.get('/:username/friends', ensureCorrectUser, async function (req, res, next) {
+  const friends = await User.getFriends(req.params.username);
+  return res.json({ friends });
 });
 
 

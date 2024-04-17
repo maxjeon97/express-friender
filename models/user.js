@@ -45,12 +45,12 @@ class User {
         friend_radius)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING username,
-                first_name AS firstName,
-                last_name AS lastName,
+                first_name AS "firstName",
+                last_name AS "lastName",
                 hobbies,
                 interests,
                 location,
-                friend_radius AS friendRadius`,
+                friend_radius AS "friendRadius"`,
       [username, hashedPassword, firstName, lastName, hobbies, interests, location, friendRadius]
     );
     return results.rows[0];
@@ -78,8 +78,8 @@ class User {
   static async all() {
     const results = await db.query(
       `SELECT username,
-              first_name AS firstName,
-              last_name AS lastName
+              first_name AS "firstName",
+              last_name AS "lastName"
       FROM users
       ORDER BY username`
     );
@@ -92,26 +92,28 @@ class User {
    * returns {username,
    *          firstName,
    *          lastName,
+   *          "imageUrl"
    *          hobbies,
    *          interests,
    *          location,
    *          friendRadius } */
 
-  //TODO: add image to schema
   static async get(username) {
     const results = await db.query(
       `SELECT username,
-              first_name AS firstName,
-              last_name AS lastName,
+              first_name AS "firstName",
+              last_name AS "lastName",
+              image_url AS "imageUrl",
               hobbies,
               interests,
               location,
-              friend_radius AS friendRadius,
-              last_searched AS lastSearched,
+              friend_radius AS "friendRadius",
+              last_searched AS "lastSearched"
       FROM users
       WHERE username = $1`,
       [username]
     );
+    console.log("*******************", results.rows[0]);
 
     if (!results.rows[0]) {
       throw new NotFoundError(`Cannot find user: ${username}`);
@@ -126,6 +128,7 @@ class User {
    *
    * returns [{firstName,
    *           lastName,
+   *           "imageUrl"
    *           hobbies,
    *           interests,
    *           location}, ...]
@@ -133,19 +136,25 @@ class User {
   static async getViewableUsers(username, location, friendRadius) {
     const locations = await getZipCodesInRadius(location, friendRadius);
     const zipCodes = locations.map(l => l.zip_code);
+    // const zipCodes = ["94510", "94563", "94512", "94581"];
 
     const results = await db.query(
-      `SELECT first_name AS firstName,
-              last_name AS lastName,
+      `SELECT first_name AS "firstName",
+              last_name AS "lastName",
+              image_url AS "imageUrl",
               hobbies,
               interests,
               location
         FROM users AS u
-        JOIN viewed_users AS v ON(v.viewed_username = u.username)
-        WHERE location in $1
-        AND v.viewing_username <> $2`,
+        LEFT OUTER JOIN viewed_users AS v ON(v.viewed_username = u.username)
+        WHERE location = ANY ($1)
+        AND u.username <> $2
+        AND (v.viewing_username <> $2
+        OR v.viewing_username IS NULL)`,
       [zipCodes, username]
     );
+
+    console.log("**********************results", results.rows);
 
     const users = results.rows.map(u => ({
       ...u,
@@ -161,38 +170,39 @@ class User {
   }
 
 
-  //TODO: Add seed data to test this query
+  //FIXME: refactor later if time
 
   /**Get all friends of user
    *
-   * returns [{firstName,
+   * returns [{username,
+   *           firstName,
    *           lastName,
-   *           hobbies,
-   *           interests,
-   *           location}, ...]
+   *           "imageUrl"}, ...]
    */
   static async getFriends(username) {
-    const results = await db.query(
-      `SELECT
-        CASE
-          WHEN f.username1 = $1
-          THEN u2.username
-              u2.first_name AS firstName,
-              u2.last_name AS lastName
-          WHEN f.username2 = $1
-          THEN u1.username
-              u1.first_name AS firstName,
-              u1.last_name AS lastName
-        END
-        FROM friends AS f
-        JOIN users AS u1 ON(f.username1 = u1.username)
-        JOIN users AS u2 ON(f.username2 = u2.username)
-        WHERE f.username1 = $1
-        OR f.username2 = $1`,
+    const results1 = await db.query(
+      `SELECT f.username1,
+            u.first_name AS "firstName",
+            u.last_name AS "lastName",
+            u.image_url AS "imageUrl"
+      FROM friends AS f
+        JOIN users AS u ON (u.username = f.username1)
+      WHERE f.username2 = $1`,
       [username]
     );
 
-    return results.rows;
+    const results2 = await db.query(
+      `SELECT f.username2,
+            u.first_name AS "firstName",
+            u.last_name AS "lastName",
+            u.image_url AS "imageUrl"
+      FROM friends AS f
+        JOIN users AS u ON (u.username = f.username2)
+      WHERE f.username1 = $1`,
+      [username]
+    );
+
+    return results1.rows.concat(results2.rows);
   }
 
   /**Adds friend relationship into the friends table in database

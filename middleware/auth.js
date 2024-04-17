@@ -11,15 +11,18 @@ const { UnauthorizedError } = require("../expressError");
 /** Middleware: Authenticate user. */
 
 function authenticateJWT(req, res, next) {
-  try {
-    const tokenFromRequest = req.query?._token || req.body?._token;
-    const payload = jwt.verify(tokenFromRequest, SECRET_KEY);
-    res.locals.user = payload;
-    return next();
-  } catch (err) {
-    // error in this middleware isn't error -- continue on
-    return next();
+  const authHeader = req.headers?.authorization;
+  if (authHeader) {
+    // token is removing 'Bearer' so we can get the payload in oBJ FORM
+    const token = authHeader.replace(/^[Bb]earer /, "").trim();
+
+    try {
+      res.locals.user = jwt.verify(token, SECRET_KEY);
+    } catch (err) {
+      /* ignore invalid tokens (but don't store user!) */
+    }
   }
+  return next();
 }
 
 /** Middleware: Requires user is authenticated. */
@@ -35,6 +38,8 @@ function ensureLoggedIn(req, res, next) {
 function ensureCorrectUser(req, res, next) {
   const currentUser = res.locals.user;
   const hasUnauthorizedUsername = currentUser?.username !== req.params.username;
+
+  console.log("****************current User", currentUser);
 
   if (!currentUser || hasUnauthorizedUsername) {
     throw new UnauthorizedError();

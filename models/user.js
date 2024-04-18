@@ -130,9 +130,9 @@ class User {
    * all the fields; this only changes provided ones.
    *
    * Data can include:
-   *   { firstName, lastName, hobbies, interests, location, friendRadius }
+   *   { firstName, lastName, hobbies, interests, location, friendRadius, lastSearched }
    *
-   * Returns { firstName, lastName, hobbies, interests, location, friendRadius }
+   * Returns { firstName, lastName, hobbies, interests, location, friendRadius, lastSearched }
    *
    * Throws NotFoundError if not found.
    *
@@ -145,6 +145,7 @@ class User {
         firstName: "first_name",
         lastName: "last_name",
         friendRadius: "friend_radius",
+        lastSearched: "last_searched",
       });
     const usernameVarIdx = "$" + (values.length + 1);
 
@@ -157,7 +158,8 @@ class User {
             hobbies,
             interests,
             location,
-            friend_radius AS "friendRadius"`;
+            friend_radius AS "friendRadius",
+            last_searched AS "lastSearched"`;
     const result = await db.query(querySql, [...values, username]);
     const user = result.rows[0];
 
@@ -182,7 +184,8 @@ class User {
 
   /**GET: returns users that are viewable by the user sending the request
    *
-   * returns [{firstName,
+   * returns [{username
+   *           firstName,
    *           lastName,
    *           "imageUrl"
    *           hobbies,
@@ -192,10 +195,10 @@ class User {
   static async getViewableUsers(username, location, friendRadius) {
     const locations = await getZipCodesInRadius(location, friendRadius);
     const zipCodes = locations.map(l => l.zip_code);
-    // const zipCodes = ["94510", "94563", "94512", "94581"];
 
     const results = await db.query(
-      `SELECT first_name AS "firstName",
+      `SELECT username,
+              first_name AS "firstName",
               last_name AS "lastName",
               image_url AS "imageUrl",
               hobbies,

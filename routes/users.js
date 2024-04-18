@@ -34,9 +34,9 @@ router.get('/:username', ensureLoggedIn, async function (req, res, next) {
 /** PATCH /[username] { user } => { user }
  *
  * Data can include:
- *   { firstName, lastName, hobbies, interests, location, friendRadius }
+ *   { firstName, lastName, hobbies, interests, location, friendRadius, lastSearched }
  *
- * Returns { firstName, lastName, hobbies, interests, location, friendRadius }
+ * Returns { firstName, lastName, hobbies, interests, location, friendRadius, lastSearched }
  *
  * Authorization required: same user as username
  **/
@@ -59,7 +59,7 @@ router.delete("/:username", ensureCorrectUser, async function (req, res, next) {
 
 /** GET /:username/viewable - get viewable users for username
  *
- * => { users: [{firstName, lastName, imageUrl, hobbies, interests, location, area}] }
+ * => { users: [{username, firstName, lastName, imageUrl, hobbies, interests, location, area}] }
  *
  **/
 

@@ -240,7 +240,7 @@ class User {
    */
   static async getFriends(username) {
     const results1 = await db.query(
-      `SELECT f.username1,
+      `SELECT f.username1 AS "username",
             u.first_name AS "firstName",
             u.last_name AS "lastName",
             u.image_url AS "imageUrl"
@@ -251,7 +251,7 @@ class User {
     );
 
     const results2 = await db.query(
-      `SELECT f.username2,
+      `SELECT f.username2 AS "username",
             u.first_name AS "firstName",
             u.last_name AS "lastName",
             u.image_url AS "imageUrl"
@@ -402,11 +402,6 @@ class User {
       ORDER BY m.sent_at`,
       [currUsername, friendUsername]
     );
-
-    if (results.rows.length === 0) {
-      throw new NotFoundError(
-        `Cannot find messages between ${currUsername} and ${friendUsername}`);
-    }
 
     const messageData = results.rows.map(m => {
       return {

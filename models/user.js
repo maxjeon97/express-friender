@@ -384,7 +384,7 @@ class User {
      *   {username, firstName, lastName}
      */
 
-  static async messagesBetween(currUsername, matchUsername) {
+  static async messagesBetween(currUsername, friendUsername) {
     const results = await db.query(
       `SELECT m.id,
               m.from_username,
@@ -400,12 +400,12 @@ class User {
         OR (m.to_username = $2
         AND m.from_username = $1)
       ORDER BY m.sent_at`,
-      [currUsername, matchUsername]
+      [currUsername, friendUsername]
     );
 
     if (results.rows.length === 0) {
       throw new NotFoundError(
-        `Cannot find messages between ${currUsername} and ${matchUsername}`);
+        `Cannot find messages between ${currUsername} and ${friendUsername}`);
     }
 
     const messageData = results.rows.map(m => {

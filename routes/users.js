@@ -28,6 +28,8 @@ router.get('/', ensureLoggedIn, async function (req, res, next) {
 
 router.get('/:username', ensureLoggedIn, async function (req, res, next) {
   const user = await User.get(req.params.username);
+  const userFriends = await User.getFriends(req.params.username);
+  user.friends = userFriends;
   return res.json({ user });
 });
 
@@ -124,7 +126,7 @@ router.get('/:username/from', ensureCorrectUser, async function (req, res, next)
   return res.json({ messages });
 });
 
-/** GET /:username/messages-between/:matchUsername - get messages from user
+/** GET /:username/messages-between/:friendUsername - get messages between two users
  *
  * => {messages: [{id,
  *                 body,
@@ -134,8 +136,8 @@ router.get('/:username/from', ensureCorrectUser, async function (req, res, next)
  *
  **/
 
-router.get('/:username/messages-between/:matchUsername', ensureCorrectUser, async function (req, res, next) {
-  const messages = await User.messagesBetween(req.params.username, req.params.matchUsername);
+router.get('/:username/messages-between/:friendUsername', ensureCorrectUser, async function (req, res, next) {
+  const messages = await User.messagesBetween(req.params.username, req.params.friendUsername);
   return res.json({ messages });
 });
 

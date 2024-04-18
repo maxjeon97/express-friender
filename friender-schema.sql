@@ -4,7 +4,7 @@ CREATE TABLE users (
   password TEXT NOT NULL,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
-  image_url TEXT NOT NULL DEFAULT '',
+  image_url TEXT NOT NULL DEFAULT 'https://express-friender-mj.s3.us-west-1.amazonaws.com/default-friender-image.jpg',
   hobbies TEXT NOT NULL,
   interests TEXT NOT NULL,
   location VARCHAR(5) NOT NULL,

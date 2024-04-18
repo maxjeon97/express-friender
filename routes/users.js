@@ -64,9 +64,9 @@ router.delete("/:username", ensureCorrectUser, async function (req, res, next) {
  **/
 
 router.get('/:username/viewable', ensureCorrectUser, async function (req, res, next) {
-  const { location, radius } = req.query;
+  const { location, friendRadius } = req.query;
   const users =
-    await User.getViewableUsers(req.params.username, location, radius);
+    await User.getViewableUsers(req.params.username, location, friendRadius);
 
   return res.json({ users });
 });

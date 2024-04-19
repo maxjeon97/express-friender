@@ -187,7 +187,7 @@ class User {
    * returns [{username
    *           firstName,
    *           lastName,
-   *           "imageUrl"
+   *           imageUrl,
    *           hobbies,
    *           interests,
    *           location}, ...]
@@ -234,7 +234,7 @@ class User {
    * returns [{username,
    *           firstName,
    *           lastName,
-   *           "imageUrl"}, ...]
+   *           imageUrl}, ...]
    */
   static async getFriends(username) {
     const results1 = await db.query(
@@ -286,101 +286,13 @@ class User {
     return;
   }
 
-  /** Return messages from this user.
-   *
-   * [{id, to_user, body, sent_at, read_at}]
-   *
-   * where to_user is
-   *   {username, first_name, last_name}
-   */
-
-  static async messagesFrom(username) {
-    const results = await db.query(
-      `SELECT m.id,
-              m.to_username,
-              u.first_name,
-              u.last_name,
-              m.body,
-              m.sent_at,
-              m.read_at
-      FROM messages m
-      JOIN users u ON(u.username = m.to_username)
-      WHERE m.from_username = $1`,
-      [username]
-    );
-
-    if (results.rows.length === 0) {
-      throw new NotFoundError(`Cannot find user: ${username}`);
-    }
-
-    const messageData = results.rows.map(m => {
-      return {
-        id: m.id,
-        toUser: {
-          username: m.to_username,
-          firstName: m.first_name,
-          lastName: m.last_name
-        },
-        body: m.body,
-        sentAt: m.sent_at,
-        readAt: m.read_at
-      };
-    });
-
-    return messageData;
-  }
-
-  /** Return messages to this user.
-   *
-   * [{id, from_user, body, sent_at, read_at}]
-   *
-   * where from_user is
-   *   {username, first_name, last_name}
-   */
-
-  static async messagesTo(username) {
-    const results = await db.query(
-      `SELECT m.id,
-              m.from_username,
-              u.first_name,
-              u.last_name,
-              m.body,
-              m.sent_at,
-              m.read_at
-      FROM messages m
-      JOIN users u ON(u.username = m.from_username)
-      WHERE m.to_username = $1`,
-      [username]
-    );
-
-    if (results.rows.length === 0) {
-      throw new NotFoundError(`Cannot find user: ${username}`);
-    }
-
-    const messageData = results.rows.map(m => {
-      return {
-        id: m.id,
-        fromUser: {
-          username: m.from_username,
-          firstName: m.first_name,
-          lastName: m.last_name
-        },
-        body: m.body,
-        sentAt: m.sent_at,
-        readAt: m.read_at
-      };
-    });
-
-    return messageData;
-  }
-
   /** Return messages between current user and one of their matches
-     *
-     * [{id, fromUser, body, sentAt, readAt}]
-     *
-     * where fromUser is
-     *   {username, firstName, lastName}
-     */
+   *
+   * [{id, fromUser, body, sentAt, readAt}]
+   *
+   * where fromUser is {username, firstName, lastName}
+   *
+   */
 
   static async messagesBetween(currUsername, friendUsername) {
     const results = await db.query(
@@ -417,7 +329,94 @@ class User {
 
     return messageData;
   }
-}
 
+  /** Return messages from this user.
+   *
+   * [{id, to_user, body, sent_at, read_at}]
+   *
+   * where to_user is
+   *   {username, first_name, last_name}
+   */
+
+  // static async messagesFrom(username) {
+  //   const results = await db.query(
+  //     `SELECT m.id,
+  //             m.to_username,
+  //             u.first_name,
+  //             u.last_name,
+  //             m.body,
+  //             m.sent_at,
+  //             m.read_at
+  //     FROM messages m
+  //     JOIN users u ON(u.username = m.to_username)
+  //     WHERE m.from_username = $1`,
+  //     [username]
+  //   );
+
+  //   if (results.rows.length === 0) {
+  //     throw new NotFoundError(`Cannot find user: ${username}`);
+  //   }
+
+  //   const messageData = results.rows.map(m => {
+  //     return {
+  //       id: m.id,
+  //       toUser: {
+  //         username: m.to_username,
+  //         firstName: m.first_name,
+  //         lastName: m.last_name
+  //       },
+  //       body: m.body,
+  //       sentAt: m.sent_at,
+  //       readAt: m.read_at
+  //     };
+  //   });
+
+  //   return messageData;
+  // }
+
+  /** Return messages to this user.
+   *
+   * [{id, from_user, body, sent_at, read_at}]
+   *
+   * where from_user is
+   *   {username, first_name, last_name}
+   */
+
+  // static async messagesTo(username) {
+  //   const results = await db.query(
+  //     `SELECT m.id,
+  //             m.from_username,
+  //             u.first_name,
+  //             u.last_name,
+  //             m.body,
+  //             m.sent_at,
+  //             m.read_at
+  //     FROM messages m
+  //     JOIN users u ON(u.username = m.from_username)
+  //     WHERE m.to_username = $1`,
+  //     [username]
+  //   );
+
+  //   if (results.rows.length === 0) {
+  //     throw new NotFoundError(`Cannot find user: ${username}`);
+  //   }
+
+  //   const messageData = results.rows.map(m => {
+  //     return {
+  //       id: m.id,
+  //       fromUser: {
+  //         username: m.from_username,
+  //         firstName: m.first_name,
+  //         lastName: m.last_name
+  //       },
+  //       body: m.body,
+  //       sentAt: m.sent_at,
+  //       readAt: m.read_at
+  //     };
+  //   });
+
+  //   return messageData;
+  // }
+}
 
 module.exports = User;

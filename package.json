@@ -1,11 +1,12 @@
 {
-  "name": "rithmschool-start-js-express",
+  "name": "express-friender-api",
   "version": "1.0.0",
-  "homepage": "https://github.com/rithmschool/start/",
+  "homepage": "",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "start:debug": "node --inspect-brk $npm_package_main",
+    "dev": "nodemon server.js",
     "test": "vitest",
     "test:cov": "vitest --coverage",
     "test:debug": "vitest --run --inspect-brk --no-file-parallelism"

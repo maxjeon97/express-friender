@@ -213,8 +213,6 @@ class User {
       [zipCodes, username]
     );
 
-    console.log("**********************results", results.rows);
-
     const users = results.rows.map(u => ({
       ...u,
       area: {

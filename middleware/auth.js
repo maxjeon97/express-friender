@@ -39,8 +39,6 @@ function ensureCorrectUser(req, res, next) {
   const currentUser = res.locals.user;
   const hasUnauthorizedUsername = currentUser?.username !== req.params.username;
 
-  console.log("****************current User", currentUser);
-
   if (!currentUser || hasUnauthorizedUsername) {
     throw new UnauthorizedError();
   }

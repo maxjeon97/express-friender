@@ -2,7 +2,7 @@
 
 Welcome to Friender!
 
-Backend API for a FriendFinding (Dating) App built on Express.js.
+Backend API for a FriendFinding App built on Express.js.
 
 Run `npm install` and then `npm run ...`:
 
